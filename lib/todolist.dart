@@ -3,7 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'main.dart'; // Import wajib untuk akses Class Task & TaskProvider
+import 'notification_service.dart';
 
 // ==========================================
 // 1. HALAMAN UTAMA (TODO LIST PAGE)
@@ -436,10 +440,12 @@ class MakeListScreen extends StatefulWidget {
 class _MakeListScreenState extends State<MakeListScreen> {
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
+  final _locationController = TextEditingController();
 
   DateTime _selectedDate = DateTime.now();
   String _selectedCategory = 'Personal';
   final List<String> _categories = ['Personal', 'Work', 'Urgent'];
+  String? _currentLocation;
 
   @override
   void initState() {
@@ -447,6 +453,7 @@ class _MakeListScreenState extends State<MakeListScreen> {
     if (widget.taskToEdit != null) {
       _titleController.text = widget.taskToEdit!.title;
       _descController.text = widget.taskToEdit!.description;
+      _locationController.text = widget.taskToEdit!.location ?? '';
       _selectedCategory = widget.taskToEdit!.category;
       try {
         _selectedDate = DateTime.parse(widget.taskToEdit!.date);
@@ -574,6 +581,42 @@ class _MakeListScreenState extends State<MakeListScreen> {
                     ),
                   ],
                 ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Lokasi
+            _buildInputContainer(
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.location_on_outlined,
+                    color: Color(0xFF8D6E63),
+                  ),
+                  const SizedBox(width: 15),
+                  Expanded(
+                    child: TextField(
+                      controller: _locationController,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        color: Colors.black87,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: "Add location (optional)",
+                        hintStyle: GoogleFonts.poppins(color: Colors.grey[400]),
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.my_location,
+                      color: Color(0xFF8D6E63),
+                    ),
+                    onPressed: _getCurrentLocation,
+                    tooltip: "Get current location",
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 30),
@@ -724,6 +767,9 @@ class _MakeListScreenState extends State<MakeListScreen> {
       description: _descController.text,
       category: _selectedCategory,
       isCompleted: widget.taskToEdit?.isCompleted ?? false,
+      location: _locationController.text.isNotEmpty
+          ? _locationController.text
+          : null,
     );
 
     if (widget.taskToEdit != null) {
@@ -734,8 +780,37 @@ class _MakeListScreenState extends State<MakeListScreen> {
         description: newTask.description,
         date: newTask.date,
         category: newTask.category,
+        location: newTask.location,
       );
     }
     Navigator.pop(context);
+  }
+
+  Future<void> _getCurrentLocation() async {
+    // Request location permission
+    PermissionStatus permission = await Permission.location.request();
+    if (permission != PermissionStatus.granted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Location permission denied")),
+      );
+      return;
+    }
+
+    try {
+      // Get current position
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      // Set location in text field
+      setState(() {
+        _locationController.text =
+            "${position.latitude}, ${position.longitude}";
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Failed to get location")));
+    }
   }
 }

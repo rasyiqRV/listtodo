@@ -35,6 +35,12 @@ dependencies:
   flutter_slidable: ^3.0.0 # Untuk fitur swipe kiri/kanan
   provider: ^6.0.5 # Untuk manajemen state data list
   image_picker: ^1.0.4 # Untuk ambil foto profil (opsional/mockup)
+  shared_preferences: ^2.2.2 # Tambahan untuk menyimpan session
+  share_plus: ^7.2.1 # Fitur Share (WhatsApp/Email)
+  url_launcher: ^6.2.1 # Fitur Redirect Telepon
+  flutter_local_notifications: ^17.0.0 # Fitur Push Notifikasi
+  geolocator: ^11.0.0 # Fitur Geolokasi
+  permission_handler: ^11.0.0 # Untuk mengelola permission
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
